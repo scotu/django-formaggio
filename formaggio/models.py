@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 from django.db import models
 from django.conf import settings
 
@@ -7,19 +8,42 @@ class FormaggioForm(models.Model):
     active = models.BooleanField(default=True)
     title = models.CharField(max_length=200, null=False, blank=False)
 
+    class Meta:
+        verbose_name = 'form'
+
+    def __unicode__(self):
+        return u"{0}".format(self.get_short_desc())
+
+    def get_short_desc(self):
+        return self.title
+
     def save_result(self, result_fields, user=None, contact_info=None):
         if not contact_info:
             contact_info = user.email
-        fr = FormaggioFormResult(form=self, user=user, contact_info=contact_info)
+        fr = FormaggioFormResult(
+            form=self,
+            user=user,
+            contact_info=contact_info,
+            answered_date=datetime.datetime.utcnow()
+        )
         fr.save()
-        for field in FormaggioField.objects.get(id__in=[int(x) for x in result_fields.keys()]):
+        for field in FormaggioField.objects.get(
+            id__in=[int(x) for x in result_fields.keys()]
+        ):
             field.save_value(result_fields[str(field.id)], fr)
+        fr.valid = True
+        fr.save()
 
 
 class FormaggioFormResult(models.Model):
     form = models.ForeignKey('FormaggioForm', null=False, blank=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
     contact_info = models.CharField(max_length=255, null=False, blank=False)
+    answered_date = models.DateTimeField(null=True, blank=True)
+    valid = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'form result'
 
 
 class FormaggioField(models.Model):
@@ -70,14 +94,30 @@ class FormaggioField(models.Model):
     extra = models.TextField(null=False, blank=True)
     mandatory = models.BooleanField(default=False)
 
+    class Meta:
+        verbose_name = 'form field'
+
+    def __unicode__(self):
+        return self.get_short_desc()
+
+    def get_short_desc(self):
+        return u"field: \"{0}\" (form: \"{1}\")".format(
+            self.label,
+            self.form.get_short_desc()
+        )
+
     def save_value(self, value, form_result):
-        fv = FieldValue(value=value, form_result=form_result, field=self)
+        fv = FormaggioFieldValue(
+            value=value,
+            form_result=form_result,
+            field=self
+        )
         for item in FormaggioField.FIELDS_TO_SAVE:
             setattr(fv, "original_{0}".format(item), getattr(self, item))
         fv.save()
 
 
-class FieldValue(models.Model):
+class FormaggioFieldValue(models.Model):
     # common fields with Field model
     original_index = models.BigIntegerField()
     original_label = models.TextField(null=False, blank=False)
@@ -87,5 +127,12 @@ class FieldValue(models.Model):
     original_mandatory = models.BooleanField(default=False)
     # FieldValue specific fields
     field = models.ForeignKey('FormaggioField', null=False, blank=False)
-    form_result = models.ForeignKey('FormaggioFormResult', null=False, blank=False)
+    form_result = models.ForeignKey(
+        'FormaggioFormResult',
+        null=False,
+        blank=False
+    )
     value = models.TextField()
+
+    class Meta:
+        verbose_name = 'form value'
