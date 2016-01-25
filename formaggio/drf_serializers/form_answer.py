@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from formaggio.models import FormaggioForm
+from formaggio.models import get_formaggio_form_model
 from rest_framework import serializers
 from ..models import FormaggioFormResult, FormaggioFieldValue
+FormaggioForm = get_formaggio_form_model()
 
 
 class FormaggioFieldValueSerializer(serializers.ModelSerializer):
@@ -52,6 +53,6 @@ class FormaggioFormResultSerializer(serializers.ModelSerializer):
             return form_definition.save_result(
                 result_fields=result_fields,
                 user=user,
-                contact_info=validated_data['contact_info']
+                contact_info=validated_data.get('contact_info')
             )
 

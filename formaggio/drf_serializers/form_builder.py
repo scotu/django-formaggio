@@ -1,6 +1,7 @@
+from formaggio.models import get_formaggio_form_model
 from rest_framework import serializers
-from ..models import FormaggioForm, FormaggioField
-
+from ..models import FormaggioField
+FormaggioForm = get_formaggio_form_model()
 
 class FormaggioFieldReadSerializer(serializers.ModelSerializer):
     class Meta:

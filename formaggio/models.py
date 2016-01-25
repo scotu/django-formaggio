@@ -1,15 +1,32 @@
 # -*- coding: utf-8 -*-
 import datetime
+
+from django.apps import apps as django_apps
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.conf import settings
+from .signals.definitions import form_answered
 
+def get_formaggio_form_model():
+    """
+    Returns the User model that is active in this project.
+    """
+    try:
+        return django_apps.get_model(settings.FORMAGGIO_FORM_MODEL)
+    except ValueError:
+        raise ImproperlyConfigured("FORMAGGIO_FORM_MODEL must be of the form 'app_label.model_name'")
+    except LookupError:
+        raise ImproperlyConfigured(
+            "FORMAGGIO_FORM_MODEL refers to model '%s' that has not been installed" % settings.FORMAGGIO_FORM_MODEL
+        )
 
-class FormaggioForm(models.Model):
+class AbstactFormaggioForm(models.Model):
     active = models.BooleanField(default=True)
     title = models.CharField(max_length=200, null=False, blank=False)
 
     class Meta:
         verbose_name = 'form'
+        abstract = True
 
     def __unicode__(self):
         return u"{0}".format(self.get_short_desc())
@@ -19,7 +36,7 @@ class FormaggioForm(models.Model):
 
     def save_result(self, result_fields, user=None, contact_info=None):
         if not contact_info:
-            contact_info = user.email
+            contact_info = user.get_email()
         fr = FormaggioFormResult(
             form=self,
             user=user,
@@ -33,13 +50,16 @@ class FormaggioForm(models.Model):
             field.save_value(result_fields[str(field.id)], fr)
         fr.valid = True
         fr.save()
+
+        form_answered.send(get_formaggio_form_model(), form=self, form_result=fr)
+
         return fr
 
 
 class FormaggioFormResult(models.Model):
-    form = models.ForeignKey('FormaggioForm', null=False, blank=False)
+    form = models.ForeignKey(settings.FORMAGGIO_FORM_MODEL, null=False, blank=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
-    contact_info = models.CharField(max_length=255, null=False, blank=False)
+    contact_info = models.CharField(max_length=255, null=False, blank=True)
     answered_date = models.DateTimeField(null=True, blank=True)
     valid = models.BooleanField(default=False)
 
@@ -82,7 +102,7 @@ class FormaggioField(models.Model):
     )
     active = models.BooleanField(default=True)
 
-    form = models.ForeignKey('FormaggioForm', null=False, blank=False)
+    form = models.ForeignKey(settings.FORMAGGIO_FORM_MODEL, null=False, blank=False)
     # common fields with FieldValue model
     index = models.BigIntegerField()
     label = models.TextField(null=False, blank=False)
