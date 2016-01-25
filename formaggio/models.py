@@ -27,12 +27,13 @@ class FormaggioForm(models.Model):
             answered_date=datetime.datetime.utcnow()
         )
         fr.save()
-        for field in FormaggioField.objects.get(
+        for field in FormaggioField.objects.filter(
             id__in=[int(x) for x in result_fields.keys()]
         ):
             field.save_value(result_fields[str(field.id)], fr)
         fr.valid = True
         fr.save()
+        return fr
 
 
 class FormaggioFormResult(models.Model):
@@ -48,6 +49,7 @@ class FormaggioFormResult(models.Model):
 
 class FormaggioField(models.Model):
     FIELDS_TO_SAVE = [
+        'index',
         'label',
         'kind',
         'hint',

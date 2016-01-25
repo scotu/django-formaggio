@@ -14,8 +14,12 @@ class FormaggioFieldValueSerializer(serializers.ModelSerializer):
 
 
 class FormaggioFormResultSerializer(serializers.ModelSerializer):
-    field_values = FormaggioFieldValueSerializer(many=True)
-    form = serializers.PrimaryKeyRelatedField(many=False, read_only=False)
+    field_values = FormaggioFieldValueSerializer(many=True, write_only=True)
+    form = serializers.PrimaryKeyRelatedField(
+            many=False,
+            read_only=False,
+            queryset=FormaggioForm.objects.all()
+        )
 
     class Meta:
         model = FormaggioFormResult
@@ -27,7 +31,7 @@ class FormaggioFormResultSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            form_definition = FormaggioForm.objects.get(id=validated_data['form'])
+            form_definition = validated_data['form']  # TODO: make sure it belongs to the current app
         except FormaggioForm.DoesNotExist as dne:
             raise serializers.ValidationError({
                 "form": "the form id provided didn't correspond to a valid form"
@@ -43,9 +47,11 @@ class FormaggioFormResultSerializer(serializers.ModelSerializer):
 
             result_fields = {}
             for item in validated_data['field_values']:
-                result_fields[str(item['field'])] = item['value']
-            form_definition.save_result(
+                if item['field'].form == form_definition:
+                    result_fields[str(item['field'].id)] = item['value']
+            return form_definition.save_result(
                 result_fields=result_fields,
                 user=user,
                 contact_info=validated_data['contact_info']
             )
+
