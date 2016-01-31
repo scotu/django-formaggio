@@ -47,7 +47,7 @@ class AbstactFormaggioForm(models.Model):
         for field in FormaggioField.objects.filter(
             id__in=[int(x) for x in result_fields.keys()]
         ):
-            field.save_value(result_fields[str(field.id)], fr)
+            field.save_value(result_fields[str(field.id)][0], result_fields[str(field.id)][1], fr)
         fr.valid = True
         fr.save()
 
@@ -91,6 +91,8 @@ class FormaggioField(models.Model):
     KIND_CHECKBOX_VALUE = 'CHECKBOX'
     KIND_TEXTAREA_TEXT = 'textarea'
     KIND_TEXTAREA_VALUE = 'TEXT_AREA'
+    KIND_FILEUPLOAD_TEXT = 'file upload'
+    KIND_FILEUPLOAD_VALUE = 'FILEUPLOAD'
     KIND_CHOICES = (
         (KIND_TEXT_VALUE, KIND_TEXT_TEXT,),
         (KIND_NUMBER_VALUE, KIND_NUMBER_TEXT,),
@@ -99,6 +101,7 @@ class FormaggioField(models.Model):
         (KIND_NAME_VALUE, KIND_NAME_TEXT,),
         (KIND_CHECKBOX_VALUE, KIND_CHECKBOX_TEXT,),
         (KIND_TEXTAREA_VALUE, KIND_TEXTAREA_TEXT,),
+        (KIND_FILEUPLOAD_VALUE, KIND_FILEUPLOAD_TEXT,),
     )
     active = models.BooleanField(default=True)
 
@@ -128,9 +131,10 @@ class FormaggioField(models.Model):
             self.form.get_short_desc()
         )
 
-    def save_value(self, value, form_result):
+    def save_value(self, value, file_value, form_result):
         fv = FormaggioFieldValue(
             value=value,
+            file_value=file_value,
             form_result=form_result,
             field=self
         )
@@ -147,14 +151,15 @@ class FormaggioFieldValue(models.Model):
     original_hint = models.TextField(null=False, blank=True)
     original_extra = models.TextField(null=False, blank=True)
     original_mandatory = models.BooleanField(default=False)
-    # FieldValue specific fields
+    # FormaggioFieldValue specific fields
     field = models.ForeignKey('FormaggioField', null=False, blank=False)
     form_result = models.ForeignKey(
         'FormaggioFormResult',
         null=False,
         blank=False
     )
-    value = models.TextField()
+    value = models.TextField(null=False, blank=True)
+    file_value = models.FileField(null=True, blank=True)
 
     class Meta:
         verbose_name = 'form value'
