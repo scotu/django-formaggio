@@ -89,7 +89,7 @@ class FormaggioField(models.Model):
     KIND_NAME_VALUE = 'TEXT_FIELD_NAME'
     KIND_CHECKBOX_TEXT = 'checkbox'
     KIND_CHECKBOX_VALUE = 'CHECKBOX'
-    KIND_TEXTAREA_TEXT = 'textarea'
+    KIND_TEXTAREA_TEXT = 'text area'
     KIND_TEXTAREA_VALUE = 'TEXT_AREA'
     KIND_FILEUPLOAD_TEXT = 'file upload'
     KIND_FILEUPLOAD_VALUE = 'FILEUPLOAD'
