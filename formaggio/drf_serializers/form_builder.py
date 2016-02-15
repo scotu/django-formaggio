@@ -34,3 +34,19 @@ class FormaggioFormReadSerializer(serializers.ModelSerializer):
             many=True,
             read_only=True
         ).data
+
+class FormaggioFieldSerializer(serializers.ModelSerializer):
+    form = serializers.PrimaryKeyRelatedField(
+        queryset=get_formaggio_form_model().objects.all()
+    )
+
+    class Meta:
+        model = FormaggioField
+        fields = [
+            'form',
+            'index',
+            'label',
+            'kind',
+            'hint',
+            'mandatory'
+        ]
