@@ -65,6 +65,7 @@ class FormaggioFormResult(models.Model):
 
     class Meta:
         verbose_name = 'form result'
+        ordering = ['-answered_date']
 
 
 class FormaggioField(models.Model):
@@ -121,6 +122,7 @@ class FormaggioField(models.Model):
 
     class Meta:
         verbose_name = 'form field'
+        ordering = ['form', 'index']
 
     def __unicode__(self):
         return self.get_short_desc()
