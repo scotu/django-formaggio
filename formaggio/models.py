@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals
 import datetime
 
 from django.apps import apps as django_apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.conf import settings
+from django.utils.encoding import python_2_unicode_compatible
 from .signals.definitions import form_answered
 
 def get_formaggio_form_model():
@@ -20,6 +22,8 @@ def get_formaggio_form_model():
             "FORMAGGIO_FORM_MODEL refers to model '%s' that has not been installed" % settings.FORMAGGIO_FORM_MODEL
         )
 
+
+@python_2_unicode_compatible
 class AbstactFormaggioForm(models.Model):
     active = models.BooleanField(default=True)
     title = models.CharField(max_length=200, null=False, blank=False)
@@ -28,8 +32,8 @@ class AbstactFormaggioForm(models.Model):
         verbose_name = 'form'
         abstract = True
 
-    def __unicode__(self):
-        return u"{0}".format(self.get_short_desc())
+    def __str__(self):
+        return "{0}".format(self.get_short_desc())
 
     def get_short_desc(self):
         return self.title
@@ -68,6 +72,7 @@ class FormaggioFormResult(models.Model):
         ordering = ['-answered_date']
 
 
+@python_2_unicode_compatible
 class FormaggioField(models.Model):
     FIELDS_TO_SAVE = [
         'index',
@@ -124,11 +129,11 @@ class FormaggioField(models.Model):
         verbose_name = 'form field'
         ordering = ['form', 'index']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.get_short_desc()
 
     def get_short_desc(self):
-        return u"field: \"{0}\" (form: \"{1}\")".format(
+        return "field: \"{0}\" (form: \"{1}\")".format(
             self.label,
             self.form.get_short_desc()
         )
