@@ -41,6 +41,10 @@ class AbstactFormaggioForm(models.Model):
     def save_result(self, result_fields, user=None, contact_info=None):
         if not contact_info:
             contact_info = user.get_email()
+        if user and not user.is_authenticated():
+            # cannot attach AnonymousUser to a foreign key of type User, set
+            # it to None if so
+            user = None
         fr = FormaggioFormResult(
             form=self,
             user=user,
