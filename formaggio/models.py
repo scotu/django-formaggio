@@ -45,6 +45,9 @@ class AbstactFormaggioForm(models.Model):
             user = None
         if not contact_info and user:
             contact_info = user.get_email()
+        elif not contact_info and not user:
+            # I need empty string instead of None because we don't allow NULL
+            contact_info = ""
         fr = FormaggioFormResult(
             form=self,
             user=user,
