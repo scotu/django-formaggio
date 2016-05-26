@@ -157,6 +157,15 @@ class FormaggioField(models.Model):
         fv.save()
 
 
+def get_form_file_upload_path(instance, filename):
+    from time import gmtime, strftime
+    time_string = strftime("%Y/%m/%d", gmtime())
+    return 'formaggio/upload/{0}/{1}'.format(
+        time_string,
+        filename
+    )
+
+
 class FormaggioFieldValue(models.Model):
     # common fields with Field model
     original_index = models.BigIntegerField()
@@ -173,7 +182,11 @@ class FormaggioFieldValue(models.Model):
         blank=False
     )
     value = models.TextField(null=False, blank=True)
-    file_value = models.FileField(null=True, blank=True)
+    file_value = models.FileField(
+        null=True,
+        blank=True,
+        upload_to=get_form_file_upload_path
+    )
 
     class Meta:
         verbose_name = 'form value'
