@@ -43,6 +43,7 @@ class FormaggioFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormaggioField
         fields = [
+            'id'
             'form',
             'index',
             'label',
